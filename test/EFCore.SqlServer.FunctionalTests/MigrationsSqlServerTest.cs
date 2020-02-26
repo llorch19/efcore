@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -11,6 +13,7 @@ using Microsoft.EntityFrameworkCore.Scaffolding.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Scaffolding.Internal;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -1554,6 +1557,100 @@ WHERE [Id] = 2;
 SELECT @@ROWCOUNT;");
         }
 
+        [ConditionalFact]
+        public void Interface_properties_are_sorted_with_class_properties()
+        {
+            Test(
+                _ => { },
+                target =>
+                {
+                    target.Entity<Domain.AccountingDocument>(
+                        entity =>
+                        {
+                            // Primary Key
+                            entity.HasKey(e => new { e.Id, e.ClientId, e.ClientFiscalYearId });
+
+                            // Indexes and Foreign Keys
+                            entity.HasIndex(e => new { e.DocumentTypeId, e.ClientId })
+                                .HasName("IX_AccountingDocument_DocumentType");
+
+                        });
+                    target.Entity<Domain.AccountingDocumentDetail>(
+                        entity =>
+                        {
+                            // Primary Key
+                            entity.HasKey(e => e.Id);
+
+                            // Force Identity
+                            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+                            // Indexes and Foreign Keys
+                            entity.HasIndex(e => new { e.Debit, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_Debit_ClientId_FiscalYearId");
+
+                            entity.HasIndex(e => new { e.Credit, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_Credit_ClientId_FiscalYearId");
+
+                            entity.HasIndex(e => new { e.Date, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_Date_ClientId_FiscalYearId");
+
+                            entity.HasIndex(e => new { e.DueDate, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_DueDate_ClientId_FiscalYearId");
+
+
+                            entity.HasIndex(e => new { e.AccountingDocumentId, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_AccountingDocument");
+
+                            entity.HasOne(d => d.AccountingDocument)
+                                .WithMany(p => p.AccountingDocumentDetails)
+                                .HasForeignKey(d => new { d.AccountingDocumentId, d.ClientId, d.ClientFiscalYearId })
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .HasConstraintName("FK_AccountingDocumentDetail_AccountingDocument");
+                        });
+                },
+                databaseModel =>
+                {
+                    var accountingDocumentTable = databaseModel.Tables.Where(t => t.Name == "AccountingDocument");
+                    var accountingDocumentDetailTable = databaseModel.Tables.Where(t => t.Name == "AccountingDocumentDetail");
+
+                    //var accountingDocumentTableCreation = (CreateTableOperation)operations.Single(o => o is CreateTableOperation ct && ct.Name == "AccountingDocument");
+                    //Assert.Collection(
+                    //    accountingDocumentTableCreation.Columns,
+                    //    c => Assert.Equal("Id", c.Name),
+                    //    c => Assert.Equal("ClientId", c.Name),
+                    //    c => Assert.Equal("ClientFiscalYearId", c.Name),
+                    //    c => Assert.Equal("Date", c.Name),
+                    //    c => Assert.Equal("ClassProperty", c.Name)
+                    //    );
+
+                    // var accountingDocumentDetailTableCreation = (CreateTableOperation)operations.Single(o => o is CreateTableOperation ct && ct.Name == "AccountingDocumentDetail");
+                    //Assert.Collection(
+                    //    accountingDocumentDetailTableCreation.Columns,
+                    //    c => Assert.Equal("Id", c.Name),
+                    //    c => Assert.Equal("ClientId", c.Name),
+                    //    c => Assert.Equal("ClientFiscalYearId", c.Name),
+                    //    c => Assert.Equal("Date", c.Name),
+                    //    c => Assert.Equal("ClassProperty", c.Name)
+                    //    );
+
+                    //var generator = new CSharpMigrationOperationGenerator(
+                    //    new CSharpMigrationOperationGeneratorDependencies(
+                    //        new CSharpHelper(
+                    //            new SqlServerTypeMappingSource(
+                    //                TestServiceFactory.Instance.Create<TypeMappingSourceDependencies>(),
+                    //                TestServiceFactory.Instance.Create<RelationalTypeMappingSourceDependencies>()))));
+
+                    //var builder = new IndentedStringBuilder();
+
+                    //generator.Generate(
+                    //    "mb",
+                    //    operations,
+                    //    builder);
+
+                    //Assert.Equal("Test", builder.ToString());
+                });
+        }
+
         public class MigrationsSqlServerFixture : MigrationsFixtureBase
         {
             protected override string StoreName { get; } = nameof(MigrationsSqlServerTest);
@@ -1564,5 +1661,124 @@ SELECT @@ROWCOUNT;");
                 => base.AddServices(serviceCollection)
                     .AddScoped<IDatabaseModelFactory, SqlServerDatabaseModelFactory>();
         }
+    }
+}
+
+#nullable disable
+namespace BaseDomain
+{
+    interface IConnectionSupportClientId
+    {
+        byte ClientId { get; set; }
+    }
+
+    public interface IConnectionSupportFiscalYear
+    {
+        int ClientFiscalYearId { get; set; }
+    }
+
+    public class BaseAccountingDocument :
+        IConnectionSupportClientId,
+        IConnectionSupportFiscalYear
+    {
+        public int Id { get; set; }
+
+        public byte ClientId { get; set; }
+
+        public int ClientFiscalYearId { get; set; }
+
+        //[Column(TypeName = "date")]
+        public DateTime Date { get; set; }
+
+        public int DocumentTypeId { get; set; }
+
+        //[Required]
+        public string Note { get; set; }
+
+        //[Required]
+        //[StringLength(100)]
+        public string ModifiedBy { get; set; }
+
+        //[Column(TypeName = "datetime")]
+        public DateTime LastModification { get; set; }
+    }
+
+    public class BaseAccountingDocumentDetail :
+        IConnectionSupportClientId,
+        IConnectionSupportFiscalYear
+    {
+        public int Id { get; set; }
+
+        public int AccountingDocumentId { get; set; }
+
+        public byte ClientId { get; set; }
+
+        public int ClientFiscalYearId { get; set; }
+
+        public int AccountId { get; set; }
+
+        //[StringLength(15)]
+        public string PartnerId { get; set; }
+
+        //[StringLength(15)]
+        public string CostCenterId { get; set; }
+
+        //[StringLength(100)]
+        public string DocumentReference { get; set; }
+
+        //[StringLength(100)]
+        public string Description { get; set; }
+
+        //[Column(TypeName = "date")]
+        public DateTime Date { get; set; }
+
+        //[Column(TypeName = "date")]
+        public DateTime DueDate { get; set; }
+
+        //[Column(TypeName = "decimal(14, 2)")]
+        public decimal Debit { get; set; }
+
+        //[Column(TypeName = "decimal(14, 2)")]
+        public decimal Credit { get; set; }
+
+        //[Required]
+        //[StringLength(3)]
+        public string ForeignCurrency { get; set; }
+
+        //[Column(TypeName = "decimal(14, 2)")]
+        public decimal DebitInForeignCurrency { get; set; }
+
+        //[Column(TypeName = "decimal(14, 2)")]
+        public decimal CreditInForeignCurrency { get; set; }
+
+        //[StringLength(4)]
+        public string PaymentReferenceModel { get; set; }
+
+        //[StringLength(100)]
+        public string PaymentReference { get; set; }
+
+        //[Required]
+        //[StringLength(100)]
+        public string ModifiedBy { get; set; }
+
+        //[Column(TypeName = "datetime")]
+        public DateTime LastModification { get; set; }
+
+        public BaseAccountingDocument AccountingDocument { get; set; }
+    }
+}
+
+namespace Domain
+{
+    public class AccountingDocument : BaseDomain.BaseAccountingDocument
+    {
+        //[InverseProperty(nameof(AccountingDocumentDetail.AccountingDocument))]
+        public virtual System.Collections.Generic.ICollection<AccountingDocumentDetail> AccountingDocumentDetails { get; set; }
+    }
+
+    public class AccountingDocumentDetail : BaseDomain.BaseAccountingDocumentDetail
+    {
+        //[InverseProperty(nameof(Domain.AccountingDocument.AccountingDocumentDetails))]
+        public new AccountingDocument AccountingDocument { get; set; }
     }
 }
