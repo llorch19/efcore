@@ -8342,99 +8342,139 @@ namespace Microsoft.EntityFrameworkCore.Migrations.Internal
             }
         }
 
-        //[ConditionalFact]
-        //public void Interface_properties_are_sorted_with_class_properties()
-        //{
-        //    Execute(
-        //        _ => { },
-        //        _ => { },
-        //        target =>
-        //        {
-        //            target.Entity<Domain.AccountingDocument>(
-        //                entity =>
-        //                {
-        //                    // Primary Key
-        //                    entity.HasKey(e => new { e.Id, e.ClientId, e.ClientFiscalYearId });
+        [ConditionalFact]
+        public void Interface_properties_are_sorted_with_class_properties()
+        {
+            Execute(
+                common => { },
+                source => { },
+                target =>
+                {
+                    target.Entity<Domain.AccountingDocument>(
+                        entity =>
+                        {
+                            // Primary Key
+                            entity.HasKey(e => new { e.Id, e.ClientId, e.ClientFiscalYearId });
 
-        //                    // Indexes and Foreign Keys
-        //                    entity.HasIndex(e => new { e.DocumentTypeId, e.ClientId })
-        //                        .HasName("IX_AccountingDocument_DocumentType");
+                            // Indexes and Foreign Keys
+                            entity.HasIndex(e => new { e.DocumentTypeId, e.ClientId })
+                                .HasName("IX_AccountingDocument_DocumentType");
 
-        //                });
-        //            target.Entity<Domain.AccountingDocumentDetail>(
-        //                entity =>
-        //                {
-        //                    // Primary Key
-        //                    entity.HasKey(e => e.Id);
+                        });
+                    target.Entity<Domain.AccountingDocumentDetail>(
+                        entity =>
+                        {
+                            // Primary Key
+                            entity.HasKey(e => e.Id);
 
-        //                    // Force Identity
-        //                    entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                            // Force Identity
+                            entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        //                    // Indexes and Foreign Keys
-        //                    entity.HasIndex(e => new { e.Debit, e.ClientId, e.ClientFiscalYearId })
-        //                        .HasName("IX_AccountingDocumentDetail_Debit_ClientId_FiscalYearId");
+                            // Indexes and Foreign Keys
+                            entity.HasIndex(e => new { e.Debit, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_Debit_ClientId_FiscalYearId");
 
-        //                    entity.HasIndex(e => new { e.Credit, e.ClientId, e.ClientFiscalYearId })
-        //                        .HasName("IX_AccountingDocumentDetail_Credit_ClientId_FiscalYearId");
+                            entity.HasIndex(e => new { e.Credit, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_Credit_ClientId_FiscalYearId");
 
-        //                    entity.HasIndex(e => new { e.Date, e.ClientId, e.ClientFiscalYearId })
-        //                        .HasName("IX_AccountingDocumentDetail_Date_ClientId_FiscalYearId");
+                            entity.HasIndex(e => new { e.Date, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_Date_ClientId_FiscalYearId");
 
-        //                    entity.HasIndex(e => new { e.DueDate, e.ClientId, e.ClientFiscalYearId })
-        //                        .HasName("IX_AccountingDocumentDetail_DueDate_ClientId_FiscalYearId");
+                            entity.HasIndex(e => new { e.DueDate, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_DueDate_ClientId_FiscalYearId");
 
 
-        //                    entity.HasIndex(e => new { e.AccountingDocumentId, e.ClientId, e.ClientFiscalYearId })
-        //                        .HasName("IX_AccountingDocumentDetail_AccountingDocument");
+                            entity.HasIndex(e => new { e.AccountingDocumentId, e.ClientId, e.ClientFiscalYearId })
+                                .HasName("IX_AccountingDocumentDetail_AccountingDocument");
 
-        //                    entity.HasOne(d => d.AccountingDocument)
-        //                        .WithMany(p => p.AccountingDocumentDetails)
-        //                        .HasForeignKey(d => new { d.AccountingDocumentId, d.ClientId, d.ClientFiscalYearId })
-        //                        .OnDelete(DeleteBehavior.Restrict)
-        //                        .HasConstraintName("FK_AccountingDocumentDetail_AccountingDocument");
-        //                });
-        //        },
-        //        operations =>
-        //        {
-        //            var accountingDocumentTableCreation = (CreateTableOperation)operations.Single(o => o is CreateTableOperation ct && ct.Name == "AccountingDocument");
-        //            //Assert.Collection(
-        //            //    accountingDocumentTableCreation.Columns,
-        //            //    c => Assert.Equal("Id", c.Name),
-        //            //    c => Assert.Equal("ClientId", c.Name),
-        //            //    c => Assert.Equal("ClientFiscalYearId", c.Name),
-        //            //    c => Assert.Equal("Date", c.Name),
-        //            //    c => Assert.Equal("ClassProperty", c.Name)
-        //            //    );
+                            entity.HasOne(d => d.AccountingDocument)
+                                .WithMany(p => p.AccountingDocumentDetails)
+                                .HasForeignKey(d => new { d.AccountingDocumentId, d.ClientId, d.ClientFiscalYearId })
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .HasConstraintName("FK_AccountingDocumentDetail_AccountingDocument");
+                        });
+                },
+                upOperations =>
+                {
+                    var accountingDocumentTableCreation = (CreateTableOperation)upOperations.Single(o => o is CreateTableOperation ct && ct.Name == "AccountingDocument");
 
-        //            var accountingDocumentDetailTableCreation = (CreateTableOperation)operations.Single(o => o is CreateTableOperation ct && ct.Name == "AccountingDocumentDetail");
-        //            //Assert.Collection(
-        //            //    accountingDocumentDetailTableCreation.Columns,
-        //            //    c => Assert.Equal("Id", c.Name),
-        //            //    c => Assert.Equal("ClientId", c.Name),
-        //            //    c => Assert.Equal("ClientFiscalYearId", c.Name),
-        //            //    c => Assert.Equal("Date", c.Name),
-        //            //    c => Assert.Equal("ClassProperty", c.Name)
-        //            //    );
+                    // In "real life" these come out in the order below
+                    // But this assertion fails i.e. the test is not doing
+                    // what "real life" does
+                    Assert.Collection(
+                        accountingDocumentTableCreation.Columns,
+                        c => Assert.Equal("ClientFiscalYearId", c.Name),
+                        c => Assert.Equal("ClientId", c.Name),
+                        c => Assert.Equal("Date", c.Name),
+                        c => Assert.Equal("DocumentTypeId", c.Name),
+                        c => Assert.Equal("Id", c.Name),
+                        c => Assert.Equal("LastModification", c.Name),
+                        c => Assert.Equal("Note", c.Name),
+                        c => Assert.Equal("ModifiedBy", c.Name)
+                        );
 
-        //            var generator = new CSharpMigrationOperationGenerator(
-        //                new CSharpMigrationOperationGeneratorDependencies(
-        //                    new CSharpHelper(
-        //                        new SqlServerTypeMappingSource(
-        //                            TestServiceFactory.Instance.Create<TypeMappingSourceDependencies>(),
-        //                            TestServiceFactory.Instance.Create<RelationalTypeMappingSourceDependencies>()))));
+                    //// In this test it comes out in this order
+                    //// which is what I'd actually expect but not what
+                    //// happens in "real life".
+                    //Assert.Collection(
+                    //    accountingDocumentTableCreation.Columns,
+                    //    c => Assert.Equal("Id", c.Name),
+                    //    c => Assert.Equal("ClientId", c.Name),
+                    //    c => Assert.Equal("ClientFiscalYearId", c.Name),
+                    //    c => Assert.Equal("Date", c.Name),
+                    //    c => Assert.Equal("DocumentTypeId", c.Name),
+                    //    c => Assert.Equal("Note", c.Name),
+                    //    c => Assert.Equal("ModifiedBy", c.Name),
+                    //    c => Assert.Equal("LastModification", c.Name)
+                    //    );
 
-        //            var builder = new IndentedStringBuilder();
+                    var accountingDocumentDetailTableCreation = (CreateTableOperation)upOperations.Single(o => o is CreateTableOperation ct && ct.Name == "AccountingDocumentDetail");
+                    Assert.Collection(
+                        accountingDocumentDetailTableCreation.Columns,
+                        c => Assert.Equal("Id", c.Name),
+                        c => Assert.Equal("AccountingDocumentId", c.Name),
+                        c => Assert.Equal("ClientId", c.Name),
+                        c => Assert.Equal("ClientFiscalYearId", c.Name),
+                        c => Assert.Equal("AccountId", c.Name),
+                        c => Assert.Equal("PartnerId", c.Name),
+                        c => Assert.Equal("CostCenterId", c.Name),
+                        c => Assert.Equal("DocumentReference", c.Name),
+                        c => Assert.Equal("Description", c.Name),
+                        c => Assert.Equal("Date", c.Name),
+                        c => Assert.Equal("DueDate", c.Name),
+                        c => Assert.Equal("Debit", c.Name),
+                        c => Assert.Equal("Credit", c.Name),
+                        c => Assert.Equal("ForeignCurrency", c.Name),
+                        c => Assert.Equal("DebitInForeignCurrency", c.Name),
+                        c => Assert.Equal("CreditInForeignCurrency", c.Name),
+                        c => Assert.Equal("PaymentReferenceModel", c.Name),
+                        c => Assert.Equal("PaymentReference", c.Name),
+                        c => Assert.Equal("ModifiedBy", c.Name),
+                        c => Assert.Equal("LastModification", c.Name)
+                        );
 
-        //            generator.Generate(
-        //                "mb",
-        //                operations,
-        //                builder);
+                    //// the below should not be in this test - I was just checking
+                    //// that if the operations were in the right order that the
+                    //// generated C# was in the right order - it is
+                    //var generator = new CSharpMigrationOperationGenerator(
+                    //    new CSharpMigrationOperationGeneratorDependencies(
+                    //        new CSharpHelper(
+                    //            new SqlServerTypeMappingSource(
+                    //                TestServiceFactory.Instance.Create<TypeMappingSourceDependencies>(),
+                    //                TestServiceFactory.Instance.Create<RelationalTypeMappingSourceDependencies>()))));
 
-        //            Assert.Equal("Test", builder.ToString());
-        //        },
-        //        null,
-        //        builderOptions => builderOptions.UseSqlServer());
-        //}
+                    //var builder = new IndentedStringBuilder();
+
+                    //generator.Generate(
+                    //    "mb",
+                    //    operations,
+                    //    builder);
+
+                    //Assert.Equal("Test", builder.ToString());
+                },
+                downOperations => { },
+                builderOptions => { } /* builderOptions => builderOptions.UseSqlServer() */);
+        }
 
         [ConditionalFact]
         public void Create_table_handles_same_name_but_different_schemas_and_identifying_relationship()
@@ -8660,120 +8700,120 @@ namespace Microsoft.EntityFrameworkCore.Migrations.Internal
     }
 }
 
-//namespace BaseDomain
-//{
-//    interface IConnectionSupportClientId
-//    {
-//        byte ClientId { get; set; }
-//    }
+namespace BaseDomain
+{
+    interface IConnectionSupportClientId
+    {
+        byte ClientId { get; set; }
+    }
 
-//    public interface IConnectionSupportFiscalYear
-//    {
-//        int ClientFiscalYearId { get; set; }
-//    }
+    public interface IConnectionSupportFiscalYear
+    {
+        int ClientFiscalYearId { get; set; }
+    }
 
-//    public class BaseAccountingDocument :
-//        IConnectionSupportClientId,
-//        IConnectionSupportFiscalYear
-//    {
-//        public int Id { get; set; }
+    public class BaseAccountingDocument :
+        IConnectionSupportClientId,
+        IConnectionSupportFiscalYear
+    {
+        public int Id { get; set; }
 
-//        public byte ClientId { get; set; }
+        public byte ClientId { get; set; }
 
-//        public int ClientFiscalYearId { get; set; }
+        public int ClientFiscalYearId { get; set; }
 
-//        [Column(TypeName = "date")]
-//        public DateTime Date { get; set; }
+        [Column(TypeName = "date")]
+        public DateTime Date { get; set; }
 
-//        public int DocumentTypeId { get; set; }
+        public int DocumentTypeId { get; set; }
 
-//        [Required]
-//        public string Note { get; set; }
+        [Required]
+        public string Note { get; set; }
 
-//        [Required]
-//        [StringLength(100)]
-//        public string ModifiedBy { get; set; }
+        [Required]
+        [StringLength(100)]
+        public string ModifiedBy { get; set; }
 
-//        [Column(TypeName = "datetime")]
-//        public DateTime LastModification { get; set; }
-//    }
+        [Column(TypeName = "datetime")]
+        public DateTime LastModification { get; set; }
+    }
 
-//    public class BaseAccountingDocumentDetail :
-//        IConnectionSupportClientId,
-//        IConnectionSupportFiscalYear
-//    {
-//        public int Id { get; set; }
+    public class BaseAccountingDocumentDetail :
+        IConnectionSupportClientId,
+        IConnectionSupportFiscalYear
+    {
+        public int Id { get; set; }
 
-//        public int AccountingDocumentId { get; set; }
+        public int AccountingDocumentId { get; set; }
 
-//        public byte ClientId { get; set; }
+        public byte ClientId { get; set; }
 
-//        public int ClientFiscalYearId { get; set; }
+        public int ClientFiscalYearId { get; set; }
 
-//        public int AccountId { get; set; }
+        public int AccountId { get; set; }
 
-//        [StringLength(15)]
-//        public string PartnerId { get; set; }
+        [StringLength(15)]
+        public string PartnerId { get; set; }
 
-//        [StringLength(15)]
-//        public string CostCenterId { get; set; }
+        [StringLength(15)]
+        public string CostCenterId { get; set; }
 
-//        [StringLength(100)]
-//        public string DocumentReference { get; set; }
+        [StringLength(100)]
+        public string DocumentReference { get; set; }
 
-//        [StringLength(100)]
-//        public string Description { get; set; }
+        [StringLength(100)]
+        public string Description { get; set; }
 
-//        [Column(TypeName = "date")]
-//        public DateTime Date { get; set; }
+        [Column(TypeName = "date")]
+        public DateTime Date { get; set; }
 
-//        [Column(TypeName = "date")]
-//        public DateTime DueDate { get; set; }
+        [Column(TypeName = "date")]
+        public DateTime DueDate { get; set; }
 
-//        [Column(TypeName = "decimal(14, 2)")]
-//        public decimal Debit { get; set; }
+        [Column(TypeName = "decimal(14, 2)")]
+        public decimal Debit { get; set; }
 
-//        [Column(TypeName = "decimal(14, 2)")]
-//        public decimal Credit { get; set; }
+        [Column(TypeName = "decimal(14, 2)")]
+        public decimal Credit { get; set; }
 
-//        [Required]
-//        [StringLength(3)]
-//        public string ForeignCurrency { get; set; }
+        [Required]
+        [StringLength(3)]
+        public string ForeignCurrency { get; set; }
 
-//        [Column(TypeName = "decimal(14, 2)")]
-//        public decimal DebitInForeignCurrency { get; set; }
+        [Column(TypeName = "decimal(14, 2)")]
+        public decimal DebitInForeignCurrency { get; set; }
 
-//        [Column(TypeName = "decimal(14, 2)")]
-//        public decimal CreditInForeignCurrency { get; set; }
+        [Column(TypeName = "decimal(14, 2)")]
+        public decimal CreditInForeignCurrency { get; set; }
 
-//        [StringLength(4)]
-//        public string PaymentReferenceModel { get; set; }
+        [StringLength(4)]
+        public string PaymentReferenceModel { get; set; }
 
-//        [StringLength(100)]
-//        public string PaymentReference { get; set; }
+        [StringLength(100)]
+        public string PaymentReference { get; set; }
 
-//        [Required]
-//        [StringLength(100)]
-//        public string ModifiedBy { get; set; }
+        [Required]
+        [StringLength(100)]
+        public string ModifiedBy { get; set; }
 
-//        [Column(TypeName = "datetime")]
-//        public DateTime LastModification { get; set; }
+        [Column(TypeName = "datetime")]
+        public DateTime LastModification { get; set; }
 
-//        public BaseAccountingDocument AccountingDocument { get; set; }
-//    }
-//}
+        public BaseAccountingDocument AccountingDocument { get; set; }
+    }
+}
 
-//namespace Domain
-//{
-//    public class AccountingDocument : BaseDomain.BaseAccountingDocument
-//    {
-//        [InverseProperty(nameof(AccountingDocumentDetail.AccountingDocument))]
-//        public virtual ICollection<AccountingDocumentDetail> AccountingDocumentDetails { get; set; }
-//    }
+namespace Domain
+{
+    public class AccountingDocument : BaseDomain.BaseAccountingDocument
+    {
+        [InverseProperty(nameof(AccountingDocumentDetail.AccountingDocument))]
+        public virtual ICollection<AccountingDocumentDetail> AccountingDocumentDetails { get; set; }
+    }
 
-//    public class AccountingDocumentDetail : BaseDomain.BaseAccountingDocumentDetail
-//    {
-//        [InverseProperty(nameof(Domain.AccountingDocument.AccountingDocumentDetails))]
-//        public new AccountingDocument AccountingDocument { get; set; }
-//    }
-//}
+    public class AccountingDocumentDetail : BaseDomain.BaseAccountingDocumentDetail
+    {
+        [InverseProperty(nameof(Domain.AccountingDocument.AccountingDocumentDetails))]
+        public new AccountingDocument AccountingDocument { get; set; }
+    }
+}
