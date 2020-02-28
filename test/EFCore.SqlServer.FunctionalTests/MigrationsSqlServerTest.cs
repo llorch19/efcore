@@ -34,6 +34,24 @@ namespace Microsoft.EntityFrameworkCore
             Fixture.TestSqlLoggerFactory.SetTestOutputHelper(testOutputHelper);
         }
 
+        public override async Task Interface_properties_are_sorted_with_class_properties()
+        {
+            await base.Interface_properties_are_sorted_with_class_properties();
+
+            AssertSql(
+                @"CREATE TABLE [AccountingDocument] (
+    [Id] int NOT NULL,
+    [ClientId] tinyint NOT NULL,
+    [ClientFiscalYearId] int NOT NULL,
+    [Date] date NOT NULL,
+    [DocumentTypeId] int NOT NULL,
+    [Note] nvarchar(max) NOT NULL,
+    [ModifiedBy] nvarchar(100) NOT NULL,
+    [LastModification] datetime NOT NULL,
+    CONSTRAINT [PK_AccountingDocument] PRIMARY KEY ([Id], [ClientId], [ClientFiscalYearId])
+);");
+        }
+
         public override async Task Create_table()
         {
             await base.Create_table();
