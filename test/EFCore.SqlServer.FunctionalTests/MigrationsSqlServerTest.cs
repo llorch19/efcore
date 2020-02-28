@@ -38,16 +38,23 @@ namespace Microsoft.EntityFrameworkCore
         {
             await base.Interface_properties_are_sorted_with_class_properties();
 
+            // I know there that more SQL statements come out
+            // but the point is that the order of the columns below
+            // is what the customer sees (and what I see if I copy
+            // his test code). But it's not what this unit test
+            // produces. So the unit test is missing something that's
+            // happening to the customer. And if I can't repro it then
+            // I can't fix it
             AssertSql(
                 @"CREATE TABLE [AccountingDocument] (
-    [Id] int NOT NULL,
-    [ClientId] tinyint NOT NULL,
     [ClientFiscalYearId] int NOT NULL,
+    [ClientId] tinyint NOT NULL,
     [Date] date NOT NULL,
     [DocumentTypeId] int NOT NULL,
+    [Id] int NOT NULL,
+    [LastModification] datetime NOT NULL,
     [Note] nvarchar(max) NOT NULL,
     [ModifiedBy] nvarchar(100) NOT NULL,
-    [LastModification] datetime NOT NULL,
     CONSTRAINT [PK_AccountingDocument] PRIMARY KEY ([Id], [ClientId], [ClientFiscalYearId])
 );");
         }
