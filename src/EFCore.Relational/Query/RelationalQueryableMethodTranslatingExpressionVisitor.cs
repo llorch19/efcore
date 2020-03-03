@@ -77,7 +77,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                     queryable.EntityType, _sqlExpressionFactory.Select(queryable.EntityType, sql, methodCallExpression.Arguments[2]));
             }
 
-            var dbFunction = this._model.FindDbFunction(methodCallExpression.Method);
+            var dbFunction = _model.FindDbFunction(methodCallExpression.Method);
             if (dbFunction != null && dbFunction.IsIQueryable)
             {
                 return CreateShapedQueryExpression(methodCallExpression);

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Utilities;
 namespace Microsoft.EntityFrameworkCore.Query.SqlExpressions
 {
     /// <summary>
-    ///     Represents a SQL Table Valued Fuction in the sql generation tree.
+    ///     Represents a SQL Table Valued Function in the sql generation tree.
     /// </summary>
     public class QueryableSqlFunctionExpression : TableExpressionBase
     {

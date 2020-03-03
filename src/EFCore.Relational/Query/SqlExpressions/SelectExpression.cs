@@ -931,7 +931,7 @@ namespace Microsoft.EntityFrameworkCore.Query.SqlExpressions
             var (parentIdentifier, parentIdentifierValueComparers) = GetIdentifierAccessor(_identifier);
             var (outerIdentifier, outerIdentifierValueComparers) = GetIdentifierAccessor(_identifier.Concat(_childIdentifiers));
             innerSelectExpression.ApplyProjection();
-            
+
 			if (innerSelectExpression._identifier.Count == 0 && innerSelectExpression.Tables.FirstOrDefault(
                  t => t is QueryableSqlFunctionExpression expression && expression.SqlFunctionExpression.Arguments.Count != 0) is QueryableSqlFunctionExpression queryableFunctionExpression)
             {

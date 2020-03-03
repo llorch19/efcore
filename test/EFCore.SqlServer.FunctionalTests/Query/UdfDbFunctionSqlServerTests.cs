@@ -914,15 +914,15 @@ ORDER BY [t].[CreditCard_Number], [c].[Id], [t].[Id], [p].[CustomerId], [p].[Id]
                                                     )
                                                     as
                                                     begin
-    
+
                                                         insert into @reports
                                                         select @customerId, count(id), year(orderDate)
                                                         from orders
                                                         where customerId = @customerId
                                                         group by customerId, year(orderDate)
                                                         order by year(orderDate)
-    
-                                                        return 
+
+                                                        return
                                                     end");
 
                 context.Database.ExecuteSqlRaw(
@@ -934,13 +934,13 @@ ORDER BY [t].[CreditCard_Number], [c].[Id], [t].[Id], [p].[CustomerId], [p].[Id]
                                                     )
                                                     as
                                                     begin
-    
+
                                                         insert into @products
                                                         select top 2 ProductID, sum(Quantity) as totalSold
                                                         from lineItem
                                                         group by ProductID
                                                         order by totalSold desc
-                                                        return 
+                                                        return
                                                     end");
 
                 context.Database.ExecuteSqlRaw(
@@ -952,15 +952,15 @@ ORDER BY [t].[CreditCard_Number], [c].[Id], [t].[Id], [p].[CustomerId], [p].[Id]
                                                     )
                                                     as
                                                     begin
-    
+
                                                         insert into @products
                                                         select ProductID, sum(Quantity) as totalSold
                                                         from lineItem li
                                                         join orders o on o.id = li.orderId
                                                         where o.customerId = @customerId
                                                         group by ProductID
-                                                        
-                                                        return 
+
+                                                        return
                                                     end");
 
                 context.Database.ExecuteSqlRaw(
@@ -973,7 +973,7 @@ ORDER BY [t].[CreditCard_Number], [c].[Id], [t].[Id], [p].[CustomerId], [p].[Id]
                                                     )
                                                     as
                                                     begin
-                                                        
+
                                                         insert into @orders
                                                         select o.id, @customerId, OrderDate
                                                         from orders o
@@ -982,7 +982,7 @@ ORDER BY [t].[CreditCard_Number], [c].[Id], [t].[Id], [p].[CustomerId], [p].[Id]
                                                         group by o.id, OrderDate
                                                         having count(productId) > 1
 
-                                                        return 
+                                                        return
                                                     end");
 
 
@@ -1002,7 +1002,7 @@ ORDER BY [t].[CreditCard_Number], [c].[Id], [t].[Id], [p].[CustomerId], [p].[Id]
                                                         where c.CreditCard_CreditCardType is not null and c.CreditCard_Number is not null
                                                         and c.id = @customerId
 
-                                                        return 
+                                                        return
                                                     end");
 
                 context.Database.ExecuteSqlRaw(
@@ -1022,7 +1022,7 @@ ORDER BY [t].[CreditCard_Number], [c].[Id], [t].[Id], [p].[CustomerId], [p].[Id]
                                                         where pi.customerId = @customerId
                                                         and charindex(@areaCode, pi.number) = 1
 
-                                                        return 
+                                                        return
                                                     end");
 
 
