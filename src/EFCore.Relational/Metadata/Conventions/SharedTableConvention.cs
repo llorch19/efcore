@@ -259,7 +259,7 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Conventions
             return null;
         }
 
-        private static void TryUniquifyIndexNames(
+        private void TryUniquifyIndexNames(
             IConventionEntityType entityType, Dictionary<string, IConventionIndex> indexes, int maxLength)
         {
             foreach (var index in entityType.GetDeclaredIndexes())
